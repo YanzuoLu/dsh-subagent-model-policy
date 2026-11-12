@@ -1,0 +1,45 @@
+{
+  "name": "dsh-subagent-model-policy",
+  "version": "0.1.0",
+  "description": "Give DeepSeek Harness top-level sessions without a recorded subagent model-selection policy the one dsh records for fresh sessions",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "subagent",
+    "model-selection"
+  ],
+  "license": "MIT",
+  "author": "Yanzuo Lu",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YanzuoLu/dsh-subagent-model-policy.git"
+  },
+  "homepage": "https://github.com/YanzuoLu/dsh-subagent-model-policy#readme",
+  "bugs": {
+    "url": "https://github.com/YanzuoLu/dsh-subagent-model-policy/issues"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-agent": "^0.2.2-rc.2",
+    "@deepseek-ai/dsh-session-projection": "^0.2.2-rc.2",
+    "@deepseek-ai/dsh-tool-subagent": "^0.2.2-rc.2"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  }
+}
