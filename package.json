@@ -1,7 +1,7 @@
 {
   "name": "dsh-subagent-model-policy",
-  "version": "0.1.0",
-  "description": "Give DeepSeek Harness top-level sessions without a recorded subagent model-selection policy the one dsh records for fresh sessions",
+  "version": "0.2.0",
+  "description": "Let DeepSeek Harness subagents run on every registered model instead of a hand-kept allow-list",
   "keywords": [
     "dsh",
     "deepseek-harness",
@@ -36,6 +36,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-agent": "^0.2.2-rc.2",
+    "@deepseek-ai/dsh-llm": "^0.2.2-rc.2",
     "@deepseek-ai/dsh-session-projection": "^0.2.2-rc.2",
     "@deepseek-ai/dsh-tool-subagent": "^0.2.2-rc.2"
   },

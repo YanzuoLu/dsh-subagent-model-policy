@@ -1,16 +1,14 @@
 /**
- * Subagent model-selection policy for DeepSeek Harness sessions that dsh
- * itself leaves without one.
+ * Offers every model registered with DeepSeek Harness to subagents.
  *
- * dsh records the subagent model allow-list (`subagent-model-selection-settings`)
- * only into a fresh, unseeded top-level session when its first agent is
- * created. Sessions that predate the setting, resumed or migrated sessions and
- * seeded top-level sessions such as side chats keep no policy, so their
- * subagents may only use the parent's model. This plugin appends the same
- * `subagent/model-selection-policy` event, from the same settings, to those
- * top-level sessions when their agent is created. Sessions that already carry
- * a policy are never changed, and subagent sessions keep inheriting from
- * their parent through dsh.
+ * When an agent is created for a top-level session that has no
+ * `subagent/model-selection-policy` yet, and model selection is enabled in
+ * `subagent-model-selection-settings`, this plugin records a policy that
+ * allows every model each registered LLM provider advertises at that moment.
+ * The settings' `allowedModels` list is not used. A provider whose model list
+ * fails to load is left out, and a session for which no provider lists a model
+ * is left to dsh. Sessions that already carry a policy keep it, and subagent
+ * sessions inherit their parent's policy through dsh.
  *
  * @module dsh-subagent-model-policy
  */
@@ -35,27 +33,24 @@ const policyProjection = {
     : event.data.allowedModels,
 }
 
-/**
- * @param {import('@deepseek-ai/dsh-session').Session} session - session of a newly created agent.
- * @returns {boolean} whether dsh records the policy itself: a fresh, unseeded top-level session.
- */
-function recordedByDsh(session) {
-  return session.firstLiveSeq === 0 && !session.header.isSeeded
-}
-
 export async function apply(ctx) {
   const policyReady = ctx.sessionProjections.register(policyProjection)
 
+  // Prepended so this policy is recorded before dsh's own listener records the settings list, as the first policy wins.
   ctx.on('agent/created', async ({ agent }) => {
     const session = agent.session
-    if (session.header.origin === 'subagent' || recordedByDsh(session)) return
+    if (session.header.origin === 'subagent') return
     const policy = await policyReady
     ctx.fiber.assertActive()
     if (policy.stateOf(session) !== null) return
-    // The settings service reads the volatile allow-list, so GUI edits apply without a restart.
     const settings = ctx.get('subagentModelSelection')?.current()
     if (settings?.enabled !== true) return
-    session.append('subagent/model-selection-policy', { allowedModels: settings.allowedModels })
-  })
+    const llm = ctx.get('llm')
+    const listings = await Promise.allSettled((llm?.listProviders() ?? []).map(async provider =>
+      (await llm.listModels(provider.id)).map(model => ({ provider: provider.id, model: model.id }))))
+    ctx.fiber.assertActive()
+    const allowedModels = listings.flatMap(listing => listing.status === 'fulfilled' ? listing.value : [])
+    if (allowedModels.length > 0) session.append('subagent/model-selection-policy', { allowedModels })
+  }, { prepend: true })
   await policyReady
 }

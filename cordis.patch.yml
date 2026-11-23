@@ -1,6 +1,6 @@
 # dsh-subagent-model-policy bundle patch: mounts the plugin on the profile root
-# so it observes every agent's creation. It reads the allow-list from
-# `subagent-model-selection-settings` and does nothing while that is disabled.
+# so it observes every agent's creation. It does nothing while model selection
+# is disabled in `subagent-model-selection-settings`.
 
 - insert:
     - id: subagent-model-policy
